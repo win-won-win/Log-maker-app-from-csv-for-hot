@@ -6,8 +6,8 @@
     <title>サービス実施記録票 - 印刷</title>
     <style>
         @page {
-            size: A4 portrait;
-            margin: 8mm;
+            size: A4 landscape;
+            margin: 2mm;
         }
         
         * {
@@ -32,6 +32,26 @@
             page-break-inside: avoid;
         }
         
+        .compact-record {
+            font-size: 6px;
+            line-height: 0.9;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+            height: 45vh;
+            width: 100%;
+            max-width: none;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 2px;
+        }
+        
+        .compact-row {
+            padding: 1px 2px;
+            margin-bottom: 0px;
+            min-height: 8px;
+            border: none !important;
+        }
+        
         .page-break {
             page-break-before: always;
         }
@@ -41,24 +61,53 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 10px;
+            table-layout: auto;
+        }
+        
+        /* 折り返し防止 */
+        .compact-row td {
+            white-space: nowrap;
+            overflow: visible;
+        }
+        
+        .compact-row .flex {
+            flex-wrap: nowrap;
+            white-space: nowrap;
         }
         
         .compact-table td {
-            padding: 2px 3px;
-            font-size: 10px;
-            border: 1px solid black;
+            padding: 1px 2px;
+            font-size: 8px;
+            border: 1px solid black !important;
+        }
+        
+        .compact-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .text-xs {
+            font-size: 7px;
         }
         
         .table-row-expanded td {
-            padding: 4px 5px;
-            min-height: 1.8em;
+            padding: 8px 3px;
+            min-height: 4.8em;
+        }
+        
+        .table-row-second td {
+            padding: 8px 3px;
+            min-height: 4.8em;
         }
         
         /* セクションスタイル */
         .compact-section {
-            margin-bottom: 6px;
+            margin-bottom: 3px;
             page-break-inside: avoid;
-            border: 1px solid black;
         }
         
         /* グリッドレイアウト */
@@ -95,6 +144,73 @@
             background-color: black;
         }
         
+        /* インラインチェックボックス用スタイル */
+        .inline-block {
+            display: inline-block;
+        }
+        
+        .w-2 {
+            width: 8px !important;
+            height: 8px !important;
+            min-width: 8px;
+            min-height: 8px;
+        }
+        
+        .h-2 {
+            height: 8px !important;
+            width: 8px !important;
+            min-width: 8px;
+            min-height: 8px;
+        }
+        
+        .border {
+            border: 1px solid black !important;
+        }
+        
+        /* compact-rowの境界線を無効化 */
+        .compact-row.border {
+            border: none !important;
+        }
+        
+        .border-black {
+            border-color: black !important;
+        }
+        
+        .bg-black {
+            background-color: black !important;
+        }
+        
+        .mr-1 {
+            margin-right: 4px;
+        }
+        
+        .mr-2 {
+            margin-right: 8px;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        /* チェックボックス強化スタイル */
+        span.inline-block.w-2.h-2.border.border-black {
+            display: inline-block !important;
+            width: 8px !important;
+            height: 8px !important;
+            border: 1px solid black !important;
+            margin-right: 4px !important;
+            vertical-align: middle !important;
+            background-color: white;
+        }
+        
+        span.inline-block.w-2.h-2.border.border-black.bg-black {
+            background-color: black !important;
+        }
+        
         /* 背景色 */
         .bg-gray-100 {
             background-color: #f3f4f6;
@@ -125,6 +241,7 @@
         .mb-3 { margin-bottom: 8px; }
         .mt-2 { margin-top: 6px; }
         .ml-2 { margin-left: 8px; }
+        .print-datetime-spacing { margin-bottom: 20px; }
         
         /* テキストスタイル */
         .text-center { text-align: center; }
@@ -161,6 +278,49 @@
             
             .bg-gray-100 {
                 background-color: #f3f4f6 !important;
+            }
+            
+            /* 印刷時の境界線強化 */
+            .compact-table td {
+                border: 1px solid black !important;
+            }
+            
+            
+            /* 各項目セクションの境界線を印刷時も表示 */
+            .compact-row {
+                border: 1px solid black !important;
+            }
+            
+            .compact-row.border {
+                border: 1px solid black !important;
+            }
+            
+            .compact-row.border.border-black {
+                border: 1px solid black !important;
+            }
+            
+            .compact-record .border.border-black {
+                border: 1px solid black !important;
+            }
+            
+            /* 特記事項セクションの境界線も表示 */
+            .compact-record div.border.border-black {
+                border: 1px solid black !important;
+            }
+            
+            /* 必要な境界線を印刷時も表示 */
+            .compact-record .compact-table td {
+                border: 1px solid black !important;
+            }
+            
+            .compact-record .inline-block.w-2.h-2 {
+                border: 1px solid black !important;
+            }
+            
+            /* 境界線の印刷を確実にする */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
             }
         }
     </style>
@@ -297,7 +457,417 @@
             return `<span class="checkbox${checked ? ' checked' : ''}"></span>`;
         }
         
-        // 記録のHTMLを生成
+        // コンパクトな記録のHTMLを生成（2つの記録を1ページに）
+        function generateCompactRecordHTML(record, index, printTime) {
+            const details = record.service_details || {};
+            const isSecondRecord = index % 2 === 1;
+            const pageBreakClass = index > 0 && index % 2 === 0 ? 'page-break' : '';
+            
+            return `
+              <div class="compact-record two-records-per-page p-4 bg-white text-xs ${pageBreakClass} ${isSecondRecord ? 'mt-12' : ''}">
+                <div class="compact-layout">
+                    ${isSecondRecord ? '<div style="line-height: 2;">&nbsp;</div>' : ''}
+                    <!-- ヘッダー部分 -->
+                    <div class="text-center mb-1">
+                        <h1 class="text-sm font-bold mb-1">サービス実施記録票</h1>
+                        <div class="text-xs">
+                            <span>事業所名：さくらケアサービス</span>
+                        </div>
+                    </div>
+
+                    <!-- 基本情報 -->
+                    <div class="compact-section mb-1">
+                        <table class="compact-table">
+                            <tbody>
+                                <tr class="table-row-expanded">
+                                    <td class="bg-gray-100 font-medium" style="width: 60px;">利用者名</td>
+                                    <td style="width: 120px;">${record.user_name}様</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 80px;">サービス実施日</td>
+                                    <td style="width: 90px;">${formatDate(record.service_date)}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 80px;">提供ヘルパー名</td>
+                                    <td style="width: 60px;">${record.staff_name}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 70px;">利用者確認印</td>
+                                    <td class="text-center" style="width: 50px;"></td>
+                                </tr>
+                                <tr class="table-row-second border-t">
+                                    <td class="bg-gray-100 font-medium">サービス時間</td>
+                                    <td style="width: 120px;">${formatTime(record.start_time)}～${formatTime(record.end_time)}</td>
+                                    <td class="bg-gray-100 font-medium">サービス種類</td>
+                                    <td style="width: 90px;">${getServiceTypeDisplayName(record)}</td>
+                                    <td class="bg-gray-100 font-medium">記録作成日時</td>
+                                    <td style="width: 100px;">${formatRecordCreatedAt(record)}</td>
+                                    <td class="bg-gray-100 font-medium">責任者確認印</td>
+                                    <td class="text-center"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- コンパクトレイアウト：各セクションを1行にまとめる -->
+                    <div class="compact-layout">
+                        <!-- 事前チェック -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">事前チェック</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.pre_check && details.pre_check.health_check ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">健康チェック</span>
+                                            </span>
+                                            <span class="mr-1">体温</span>
+                                            <span class="border-b border-black px-1 min-w-6 text-center mr-1 text-xs">
+                                                ${details.pre_check?.temperature || '　'}
+                                            </span>
+                                            <span class="mr-1">°C</span>
+                                            <span class="mr-1">血圧</span>
+                                            <span class="border-b border-black px-1 min-w-8 text-center mr-1 text-xs">
+                                                ${details.pre_check?.blood_pressure || '　／　'}
+                                            </span>
+                                            <span class="mr-1">脈拍</span>
+                                            <span class="border-b border-black px-1 min-w-6 text-center mr-2 text-xs">
+                                                ${details.pre_check?.pulse || '　'}
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.pre_check?.environment_setup ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">環境整備</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.pre_check?.consultation_record ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">相談援助・記録等</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 排泄介助 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">排泄介助</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.excretion?.toilet_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">トイレ</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.excretion?.portable_toilet ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">ポータブル</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.excretion?.urinal ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">尿器</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.excretion?.diaper_change ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">おむつ交換</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.excretion?.pad_change ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">パッド交換</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.excretion?.cleaning ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">洗浄・清拭</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1"></span>
+                                                <span class="mr-1">排便（</span><span class="border-b border-black px-1 min-w-4 text-center">${details.excretion?.bowel_movement_count || '　'}</span><span class="mr-1">回）</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1"></span>
+                                                <span class="mr-1">排尿（</span><span class="border-b border-black px-1 min-w-4 text-center">${details.excretion?.urination_count || '　'}</span><span class="mr-1">回）</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 食事介助 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">食事介助</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.full_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">全介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.partial_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">一部介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.supervision ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">見守り介助</span>
+                                            </span>
+                                            
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.liquid_food ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">流動食</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.thickened_food ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">とろみ</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.blended_food ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">ミキサー食</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.chopped_food ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">きざみ食</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.completion_status === '完食' ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">完食</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.meal?.completion_status === '残量あり' ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">残量（</span><span class="border-b border-black px-1 min-w-6 text-center">${details.meal?.remaining_amount || '　'}</span><span class="mr-1">）</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1"></span>
+                                                <span class="mr-1">水分補給（</span><span class="border-b border-black px-1 min-w-6 text-center">${details.meal?.water_intake || '　'}</span><span class="mr-1">cc）</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 身体清拭・入浴 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">身体清拭・入浴</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.body_wipe ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">清拭</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.genital_wash ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">陰洗</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.full_body_bath_tub || details.body_care?.full_body_bath_shower ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">全身入浴（浴槽シャワー）</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.partial_bath_hand || details.body_care?.partial_bath_foot ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">部分浴（手・足）</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.hair_wash ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">洗髪</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.face_wash ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">洗面</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.grooming ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">整容</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_care?.oral_care ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">口腔ケア</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 身体整容・移乗移動 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">身体整容・移乗移動</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1"></span>
+                                                <span class="mr-1">爪切り（</span>
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_grooming?.nail_care_hand ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">手</span>
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_grooming?.nail_care_foot ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">足）</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_grooming?.clothing_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">更衣介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.body_grooming?.hair_styling ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">整髪</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.transfer_movement?.transfer_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">移乗介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.transfer_movement?.movement_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">移動介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.transfer_movement?.outing_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">外出介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.transfer_movement?.outing_preparation ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">外出用意</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.transfer_movement?.position_change ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">体位変換</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 起床・就寝・服薬 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">起床・就寝・服薬</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.sleep_wake?.wake_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">起床介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.sleep_wake?.sleep_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">就寝介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.medication?.medication_assistance ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">服薬介助</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.medication?.medication_confirmation ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">確認</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.medication?.ointment_eye_drops ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">軟膏・湿布・目薬</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.medication?.suppository ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">坐薬</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.medication?.sputum_suction ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">痰吸引</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 自立支援・生活援助 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">自立支援・生活援助</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.self_support?.cooking_together ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">共に行う調理</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.self_support?.safety_monitoring ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">安全の見守り</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.self_support?.housework_together ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">共に行う家事</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.life_support?.cleaning?.room_cleaning ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">居宅清掃</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.life_support?.cleaning?.toilet_cleaning ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">トイレ清掃</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.life_support?.laundry?.washing_drying ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">洗濯乾燥</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.life_support?.shopping?.daily_items ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">買い物</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 退出確認 -->
+                        <div class="border border-black mb-1 compact-row">
+                            <table class="w-full text-xs">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-gray-100 p-1 font-medium border-r border-black" style="width: 120px;">退出確認</td>
+                                        <td class="p-1 flex items-center">
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.exit_check?.fire_check ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">火元</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.exit_check?.electricity_check ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">電気</span>
+                                            </span>
+                                            <span class="flex items-center mr-2">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.exit_check?.water_check ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">水道</span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <span class="inline-block w-2 h-2 border border-black mr-1 ${details.exit_check?.door_lock_check ? 'bg-black' : ''}"></span>
+                                                <span class="mr-1">戸締まり</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 特記事項 -->
+                    <div class="border border-black mb-2">
+                        <div class="bg-gray-100 p-1 border-b border-black font-medium text-xs">特記・連絡事項</div>
+                        <div class="p-2 min-h-8">
+                            <div class="whitespace-pre-wrap text-xs">
+                                ${cleanSpecialNotes(record.special_notes) || '　'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- フッター -->
+                    <div class="mt-1 text-xs text-gray-500 text-right">
+                        印刷日時: ${printTime}
+                    </div>
+                  </div>
+                </div>
+            `;
+        }
+
+        // 通常の記録のHTMLを生成
         function generateRecordHTML(record, index, printTime) {
             const details = record.service_details || {};
             const pageBreakClass = index > 0 ? 'page-break' : '';
@@ -318,23 +888,23 @@
                             <tbody>
                                 <tr class="table-row-expanded">
                                     <td class="bg-gray-100 font-medium" style="width: 60px;">利用者名</td>
-                                    <td style="width: 80px;">${record.user_name}様</td>
-                                    <td class="bg-gray-100 font-medium" style="width: 90px;">サービス実施日</td>
-                                    <td style="width: 100px;">${formatDate(record.service_date)}</td>
-                                    <td class="bg-gray-100 font-medium" style="width: 90px;">提供ヘルパー名</td>
-                                    <td style="width: 70px;">${record.staff_name}</td>
-                                    <td class="bg-gray-100 font-medium" style="width: 90px;">利用者確認印</td>
-                                    <td class="text-center" style="width: 60px;"></td>
+                                    <td style="width: 120px;">${record.user_name}様</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 80px;">サービス実施日</td>
+                                    <td style="width: 90px;">${formatDate(record.service_date)}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 80px;">提供ヘルパー名</td>
+                                    <td style="width: 60px;">${record.staff_name}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 70px;">利用者確認印</td>
+                                    <td class="text-center" style="width: 50px;"></td>
                                 </tr>
-                                <tr class="table-row-expanded border-t">
+                                <tr class="table-row-second border-t">
                                     <td class="bg-gray-100 font-medium" style="width: 72px;">サービス時間</td>
-                                    <td style="width: 140px;">${formatTime(record.start_time)}～${formatTime(record.end_time)}</td>
-                                    <td class="bg-gray-100 font-medium" style="width: 90px;">サービス種類</td>
-                                    <td style="width: 100px;">${getServiceTypeDisplayName(record)}</td>
-                                    <td class="bg-gray-100 font-medium" style="width: 90px;">記録作成日時</td>
-                                    <td style="width: 150px;">${formatRecordCreatedAt(record)}</td>
-                                    <td class="bg-gray-100 font-medium" style="width: 90px;">責任者確認印</td>
-                                    <td class="text-center" style="width: 60px;"></td>
+                                    <td style="width: 120px;">${formatTime(record.start_time)}～${formatTime(record.end_time)}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 80px;">サービス種類</td>
+                                    <td style="width: 90px;">${getServiceTypeDisplayName(record)}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 80px;">記録作成日時</td>
+                                    <td style="width: 100px;">${formatRecordCreatedAt(record)}</td>
+                                    <td class="bg-gray-100 font-medium" style="width: 70px;">責任者確認印</td>
+                                    <td class="text-center" style="width: 50px;"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -349,7 +919,7 @@
                                 <div class="mb-1 text-xs">
                                     <div class="flex items-center mb-1">
                                         <span class="flex items-center">
-                                            ${createCheckbox(details.pre_check?.health_check)}
+                                            <span class="inline-block w-2 h-2 border border-black mr-1 ${details.pre_check?.health_check ? 'bg-black' : ''}"></span>
                                             健康チェック
                                         </span>
                                     </div>
@@ -375,11 +945,11 @@
                                 </div>
                                 <div class="flex space-x-3 text-xs">
                                     <span class="flex items-center">
-                                        ${createCheckbox(details.pre_check?.environment_setup)}
+                                        <span class="inline-block w-2 h-2 border border-black mr-1 ${details.pre_check?.environment_setup ? 'bg-black' : ''}"></span>
                                         環境整備
                                     </span>
                                     <span class="flex items-center">
-                                        ${createCheckbox(details.pre_check?.consultation_record)}
+                                        <span class="inline-block w-2 h-2 border border-black mr-1 ${details.pre_check?.consultation_record ? 'bg-black' : ''}"></span>
                                         相談援助、記録等
                                     </span>
                                 </div>
@@ -772,9 +1342,10 @@
                     </div>
 
                     <!-- フッター -->
-                    <div class="mt-2 text-xs text-gray-500 text-center">
+                    <div class="mt-1 text-xs text-gray-500 text-right print-datetime-spacing">
                         印刷日時: ${printTime}
                     </div>
+                    <div>&nbsp;</div>
                 </div>
             `;
         }
@@ -786,7 +1357,20 @@
             
             if (records.length > 0) {
                 const printTime = getPrintTime(records);
-                const html = records.map((record, index) => generateRecordHTML(record, index, printTime)).join('');
+                
+                // URLパラメータでコンパクトモードかどうかを判定
+                const urlParams = new URLSearchParams(window.location.search);
+                const isCompact = urlParams.get('compact') === 'true' || records.length > 1;
+                
+                let html;
+                if (isCompact) {
+                    // コンパクトレイアウトを使用
+                    html = records.map((record, index) => generateCompactRecordHTML(record, index, printTime)).join('');
+                } else {
+                    // 通常レイアウトを使用
+                    html = records.map((record, index) => generateRecordHTML(record, index, printTime)).join('');
+                }
+                
                 printContent.innerHTML = html;
                 
                 // 少し待ってから印刷ダイアログを表示
