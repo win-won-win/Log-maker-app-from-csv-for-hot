@@ -403,7 +403,7 @@ export function MonthlyDataManagement() {
       console.log(`Loading records for ${year}年${month + 1}月: ${startDate} to ${endDate}`);
 
       const { data, error } = await supabase
-        .from('service_records')
+        .from('csv_service_records')
         .select('*')
         .gte('service_date', startDate)
         .lte('service_date', endDate)
@@ -554,6 +554,176 @@ export function MonthlyDataManagement() {
       return;
     }
     setShowBulkPrint(true);
+  };
+
+  // 時間生成ロジック（HTMLページと同じ）
+  const generateTimesForRecord = (record: ServiceRecord) => {
+    const serviceDate = new Date(record.service_date);
+    const endTime = record.end_time;
+    
+    // 終了時間を解析（HH:MM形式）
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    
+    // 記録作成日時: サービス終了時間の5-30分後
+    const recordCreatedDate = new Date(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate());
+    const createdMinutesAfter = 5 + Math.floor(Math.random() * 25); // 5-30分後
+    const recordCreatedTime = new Date(recordCreatedDate);
+    recordCreatedTime.setHours(endHour, endMinute + createdMinutesAfter, Math.floor(Math.random() * 60), 0);
+    
+    // 印刷時間の決定
+    let printDate: Date;
+    
+    if (endHour < 15 || (endHour === 15 && endMinute === 0)) {
+      // 15時までのサービス → その日の15:30-18:00
+      printDate = new Date(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate());
+    } else {
+      // 15時以降のサービス → 翌日の15:30-18:00
+      printDate = new Date(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate() + 1);
+    }
+    
+    // 15:30-18:00の範囲でランダム時間を生成
+    const baseMinutes = 15 * 60 + 30; // 15:30を分で表現
+    const maxMinutes = 18 * 60; // 18:00を分で表現
+    const randomMinutes = baseMinutes + Math.floor(Math.random() * (maxMinutes - baseMinutes));
+    
+    const printHour = Math.floor(randomMinutes / 60);
+    const printMinute = randomMinutes % 60;
+    const printSecond = Math.floor(Math.random() * 60);
+    
+    printDate.setHours(printHour, printMinute, printSecond, 0);
+    
+    return {
+      recordCreatedAt: recordCreatedTime.toISOString(),
+      printDateTime: printDate.toISOString()
+    };
+  };
+
+  // 印刷日時割当
+  const handleAssignPrintTimes = async () => {
+    if (filteredServiceRecords.length === 0) {
+      alert('割当する記録がありません');
+      return;
+    }
+
+    const confirmed = confirm(`${filteredServiceRecords.length}件の記録に印刷日時を割り当てますか？`);
+    if (!confirmed) return;
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const record of filteredServiceRecords) {
+        try {
+          const times = generateTimesForRecord(record);
+          
+          const { error } = await supabase
+            .from('csv_service_records')
+            .update({ print_datetime: times.printDateTime })
+            .eq('id', record.id);
+
+          if (error) {
+            console.error(`記録ID ${record.id} の印刷日時更新エラー:`, error);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`記録ID ${record.id} の処理エラー:`, err);
+          errorCount++;
+        }
+      }
+
+      alert(`印刷日時割当完了\n成功: ${successCount}件\nエラー: ${errorCount}件`);
+      
+      if (successCount > 0) {
+        // データを再読み込み
+        await loadServiceRecords();
+      }
+    } catch (error) {
+      console.error('印刷日時割当エラー:', error);
+      alert('印刷日時割当中にエラーが発生しました');
+    }
+  };
+
+  // 記録作成時間割当
+  const handleAssignRecordCreatedTimes = async () => {
+    console.log('記録作成時間割当開始');
+    console.log('filteredServiceRecords:', filteredServiceRecords);
+    
+    // テーブル構造を確認
+    try {
+      const { data: tableInfo, error: tableError } = await supabase
+        .from('csv_service_records')
+        .select('*')
+        .limit(1);
+      
+      console.log('csv_service_recordsテーブルの構造確認:', tableInfo);
+      if (tableInfo && tableInfo.length > 0) {
+        console.log('利用可能なカラム:', Object.keys(tableInfo[0]));
+      }
+    } catch (err) {
+      console.error('テーブル構造確認エラー:', err);
+    }
+    
+    if (filteredServiceRecords.length === 0) {
+      alert('割当する記録がありません');
+      return;
+    }
+
+    const confirmed = confirm(`${filteredServiceRecords.length}件の記録に記録作成時間を割り当てますか？`);
+    if (!confirmed) return;
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const record of filteredServiceRecords) {
+        try {
+          console.log(`処理中の記録:`, record);
+          const times = generateTimesForRecord(record);
+          console.log(`生成された時間:`, times);
+          
+          console.log(`更新クエリ実行: csv_service_records, id=${record.id}, record_created_at=${times.recordCreatedAt}`);
+          
+          const { data, error } = await supabase
+            .from('csv_service_records')
+            .update({ record_created_at: times.recordCreatedAt })
+            .eq('id', record.id)
+            .select();
+
+          console.log(`更新結果:`, { data, error });
+
+          if (error) {
+            console.error(`記録ID ${record.id} の記録作成時間更新エラー:`, error);
+            errorCount++;
+          } else {
+            console.log(`記録ID ${record.id} の更新成功:`, data);
+            
+            // 更新後のデータを再確認
+            const { data: verifyData, error: verifyError } = await supabase
+              .from('csv_service_records')
+              .select('id, record_created_at, print_datetime')
+              .eq('id', record.id);
+            
+            console.log(`更新後の確認データ (ID: ${record.id}):`, verifyData);
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`記録ID ${record.id} の処理エラー:`, err);
+          errorCount++;
+        }
+      }
+
+      alert(`記録作成時間割当完了\n成功: ${successCount}件\nエラー: ${errorCount}件`);
+      
+      if (successCount > 0) {
+        // データを再読み込み
+        await loadServiceRecords();
+      }
+    } catch (error) {
+      console.error('記録作成時間割当エラー:', error);
+      alert('記録作成時間割当中にエラーが発生しました');
+    }
   };
 
   const handleTitleClick = () => {
@@ -1401,11 +1571,18 @@ export function MonthlyDataManagement() {
             <span>個別記録作成</span>
           </button>
           <button
-            onClick={() => setViewMode(viewMode === 'calendar' ? 'list' : 'calendar')}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center space-x-2"
+            onClick={handleAssignPrintTimes}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
           >
-            <BarChart3 className="h-4 w-4" />
-            <span>{viewMode === 'calendar' ? 'リスト表示' : 'カレンダー表示'}</span>
+            <FileText className="h-4 w-4" />
+            <span>印刷日時割当</span>
+          </button>
+          <button
+            onClick={handleAssignRecordCreatedTimes}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2"
+          >
+            <Clock className="h-4 w-4" />
+            <span>記録作成時間割当</span>
           </button>
         </div>
       </div>

@@ -12,6 +12,7 @@ interface ServiceRecord {
   service_type: string;
   service_content: string;
   record_created_at: string;
+  print_datetime?: string;
   special_notes: string;
   deposit_amount: number;
   deposit_breakdown: string;
@@ -67,8 +68,8 @@ export function BulkPrintPreview({ records, onClose }: BulkPrintPreviewProps) {
     printDate.setHours(printHour, printMinute, printSecond, 0);
     
     return {
-      recordCreatedAt: recordCreatedTime.toISOString(),
-      printDateTime: printDate.toISOString()
+      recordCreatedAt: recordCreatedTime.toLocaleString('ja-JP'),
+      printDateTime: printDate.toLocaleString('ja-JP')
     };
   };
 
@@ -618,7 +619,7 @@ export function BulkPrintPreview({ records, onClose }: BulkPrintPreviewProps) {
 
         {/* フッター */}
         <div className="mt-2 text-xs text-gray-500 text-center">
-          印刷日時: {new Date().toLocaleString('ja-JP')}
+          印刷日時: {records[0]?.print_datetime ? new Date(records[0].print_datetime).toLocaleString('ja-JP') : new Date().toLocaleString('ja-JP')}
         </div>
       </div>
     );

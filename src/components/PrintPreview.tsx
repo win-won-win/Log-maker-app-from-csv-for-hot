@@ -12,6 +12,7 @@ interface ServiceRecord {
   service_type: string;
   service_content: string;
   record_created_at: string;
+  print_datetime?: string;
   special_notes: string;
   deposit_amount: number;
   deposit_breakdown: string;
@@ -78,8 +79,8 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
     printDate.setHours(printHour, printMinute, printSecond, 0);
     
     return {
-      recordCreatedAt: recordCreatedTime.toISOString(),
-      printDateTime: printDate.toISOString()
+      recordCreatedAt: recordCreatedTime.toLocaleString('ja-JP'),
+      printDateTime: printDate.toLocaleString('ja-JP')
     };
   };
 
@@ -108,7 +109,7 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
       };
       localStorage.setItem('printRecords', JSON.stringify([recordWithPrintTime]));
       
-      const printUrl = `${window.location.origin}/print.html`;
+      const printUrl = `/print.html`;
       window.open(printUrl, '_blank');
       
       // 印刷完了後にモーダルを閉じる
@@ -168,11 +169,9 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
               margin: 8mm;
             }
             
-            /* 印刷時の基本設定 */
+            /* 印刷時にスクロールバーとモーダル要素を非表示 */
             body {
               overflow: visible !important;
-              background: white !important;
-              color: black !important;
             }
             
             .fixed, .bg-gray-600, .bg-opacity-50 {
@@ -194,20 +193,10 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
               display: none !important;
             }
             
-            /* 印刷コンテンツの基本色設定 */
-            .print-content {
-              font-size: 10px !important;
-              line-height: 1.1 !important;
-              background: white !important;
-              color: black !important;
-            }
-            
             /* テーブルとレイアウトの最適化 */
             .compact-table td {
               padding: 2px 3px !important;
               font-size: 10px !important;
-              color: black !important;
-              background: white !important;
             }
             
             .table-row-expanded td {
@@ -219,6 +208,11 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
             .compact-section {
               margin-bottom: 6px !important;
               page-break-inside: avoid;
+            }
+            
+            .print-content {
+              font-size: 10px !important;
+              line-height: 1.1 !important;
             }
             
             /* グリッドレイアウトの調整 */
@@ -245,7 +239,6 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
             
             .bg-gray-100 {
               background-color: #f3f4f6 !important;
-              color: black !important;
               -webkit-print-color-adjust: exact !important;
               color-adjust: exact !important;
             }
@@ -253,11 +246,6 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
             /* 境界線の強化 */
             .border-black {
               border-color: black !important;
-            }
-            
-            /* テキスト色の強制設定 */
-            .text-xs, .text-lg, .font-bold, .font-medium {
-              color: black !important;
             }
             
             /* 余白の調整 */
@@ -272,21 +260,6 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
             .mb-3 {
               margin-bottom: 8px !important;
             }
-          }
-          
-          /* 通常表示時の色設定も確保 */
-          .print-content {
-            background: white;
-            color: black;
-          }
-          
-          .print-content * {
-            color: black;
-          }
-          
-          .print-content .bg-gray-100 {
-            background-color: #f3f4f6;
-            color: black;
           }
         `}</style>
 
@@ -761,7 +734,7 @@ export function PrintPreview({ record, onClose }: PrintPreviewProps) {
 
           {/* フッター */}
           <div className="mt-2 text-xs text-gray-500 text-center">
-            印刷日時: {new Date().toLocaleString('ja-JP')}
+            印刷日時: {record.print_datetime ? new Date(record.print_datetime).toLocaleString('ja-JP') : new Date().toLocaleString('ja-JP')}
           </div>
         </div>
       </div>

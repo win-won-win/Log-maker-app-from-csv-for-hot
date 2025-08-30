@@ -246,14 +246,22 @@
             };
         }
         
-        // 印刷時間を決定する関数（後方互換性のため残す）
+        // 印刷時間を決定する関数（データベースから取得）
         function getPrintTime(records) {
             if (records.length === 1) {
-                return generateTimesForRecord(records[0]).printDateTime;
+                // 単一記録の場合、データベースのprint_datetimeを使用
+                if (records[0].print_datetime) {
+                    return new Date(records[0].print_datetime).toLocaleString('ja-JP');
+                }
             }
             
-            // 一括印刷の場合は最初の記録を基準にする
-            return generateTimesForRecord(records[0]).printDateTime;
+            // 一括印刷の場合は最初の記録のprint_datetimeを使用
+            if (records[0]?.print_datetime) {
+                return new Date(records[0].print_datetime).toLocaleString('ja-JP');
+            }
+            
+            // データベースに時間がない場合は現在時刻を使用
+            return new Date().toLocaleString('ja-JP');
         }
         
         // 日付フォーマット
@@ -270,16 +278,8 @@
             return `${hours}時${minutes.toString().padStart(2, '0')}分`;
         }
         
-        // 記録作成日時のフォーマット
+        // 記録作成日時のフォーマット（データベースから取得）
         function formatRecordCreatedAt(record) {
-            // print_datetimeがある場合はそれを使用
-            if (record.print_datetime) {
-                const printDate = new Date(record.print_datetime);
-                if (!isNaN(printDate.getTime())) {
-                    return printDate.toLocaleString('ja-JP');
-                }
-            }
-            
             // record_created_atがある場合はそれを使用
             if (record.record_created_at) {
                 const createdDate = new Date(record.record_created_at);
@@ -288,7 +288,7 @@
                 }
             }
             
-            // どちらもない場合は現在時刻を使用
+            // データベースに時間がない場合は現在時刻を使用
             return new Date().toLocaleString('ja-JP');
         }
         

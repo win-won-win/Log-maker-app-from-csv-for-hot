@@ -1,274 +1,278 @@
-export interface DailyData {
-  id?: string;
-  user_id: string;
-  date: string;
-  service_type: string;
-  start_time: string;
-  end_time: string;
-  staff_name: string;
-  service_content: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+/**
+ * 日別データ管理関連の型定義
+ * 時間軸データ、パターン紐付け結果の型を定義
+ */
 
-export interface ServiceRecord {
-  id?: string;
-  user_id: string;
-  date: string;
-  service_type: string;
-  start_time: string;
-  end_time: string;
-  staff_name: string;
-  service_content: string;
-  notes?: string;
-  print_datetime?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { ServicePattern, PatternDetails, PatternMatchResult } from './pattern';
 
-export interface User {
-  id: string;
-  name: string;
-  kana_name?: string;
-  birth_date?: string;
-  address?: string;
-  phone?: string;
-  emergency_contact?: string;
-  care_level?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Staff {
-  id: string;
-  name: string;
-  kana_name?: string;
-  position?: string;
-  phone?: string;
-  email?: string;
-  hire_date?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface MonthlyData {
-  user_id: string;
-  year: number;
-  month: number;
-  records: DailyData[];
-  total_hours: number;
-  total_days: number;
-}
-
-export interface PrintData {
-  user: User;
-  records: ServiceRecord[];
-  month: number;
-  year: number;
-  total_hours: number;
-  total_days: number;
-}
-
-export interface HealthBaseline {
-  id?: string;
-  user_id: string;
-  blood_pressure_systolic?: number;
-  blood_pressure_diastolic?: number;
-  pulse?: number;
-  temperature?: number;
-  weight?: number;
-  height?: number;
-  notes?: string;
-  measured_at: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ServiceType {
-  id: string;
-  name: string;
-  description?: string;
-  default_duration?: number;
-  color?: string;
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Schedule {
-  id?: string;
-  user_id: string;
-  staff_id?: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  service_type: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface BulkPrintRequest {
-  user_ids: string[];
-  year: number;
-  month: number;
-  include_notes: boolean;
-  format: 'pdf' | 'html';
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-  value?: any;
-}
-
-export interface ImportResult {
-  success: boolean;
-  imported_count: number;
-  error_count: number;
-  errors: ValidationError[];
-  warnings: string[];
-}
-
+/**
+ * 時間軸での記録データ
+ */
 export interface TimeSlotRecord {
-  id?: string;
-  user_id: string;
-  user_name?: string;
+  id: string;
+  user_name: string;
   user_code?: string;
-  date: string;
-  hour: number;
-  service_type: string;
+  staff_name: string;
   start_time: string;
   end_time: string;
-  staff_name: string;
+  duration_minutes: number;
   service_content: string;
-  notes?: string;
-  pattern_id?: string;
-  pattern_name?: string;
-  is_pattern_assigned?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  pattern_id: string | null;
+  pattern_name?: string | null;
+  pattern_details?: PatternDetails | null;
+  is_pattern_assigned: boolean;
+  record_created_at: string | null;
+  print_datetime: string | null;
+  confidence_score?: number; // パターン紐付けの信頼度
+  auto_assigned?: boolean; // 自動紐付けかどうか
 }
 
+/**
+ * 時間軸スロット（1時間単位）
+ */
 export interface TimeSlot {
-  hour: number;
-  time_label?: string;
+  hour: number; // 0-23
+  time_label: string; // "09:00-10:00"
   records: TimeSlotRecord[];
   total_records: number;
-  total_duration: number;
-  assigned_records?: number;
-  unassigned_records?: number;
-  status?: 'complete' | 'partial' | 'empty';
+  assigned_records: number;
+  unassigned_records: number;
+  status: 'complete' | 'partial' | 'none';
+  suggested_patterns: PatternMatchResult[];
 }
 
+/**
+ * 日別データの詳細情報
+ */
 export interface DailyDataDetail {
   date: string;
-  user_id: string;
-  day_of_week?: number;
+  day_of_week: number; // 0=日曜日, 1=月曜日, ..., 6=土曜日
   time_slots: TimeSlot[];
   total_records: number;
-  total_duration: number;
-  unique_staff: string[];
-  service_types: string[];
-  assigned_records?: number;
-  unassigned_records?: number;
-  completion_rate?: number;
-  users?: string[];
-  staff?: string[];
-  patterns_used?: string[];
-  status?: 'complete' | 'partial' | 'empty';
+  assigned_records: number;
+  unassigned_records: number;
+  completion_rate: number; // 紐付け完了率 (0-100)
+  status: 'complete' | 'partial' | 'none';
+  users: string[]; // その日にサービスを受けた利用者一覧
+  staff: string[]; // その日に対応した職員一覧
+  patterns_used: string[]; // 使用されたパターンID一覧
 }
 
-export interface DailyDataStats {
-  date?: string;
-  total_records: number;
-  total_duration: number;
-  unique_users: number;
-  unique_staff: number;
-  assigned_records?: number;
-  unassigned_records?: number;
-  completion_rate?: number;
-  unique_patterns?: number;
-  service_type_distribution: { [key: string]: number };
-  pattern_distribution: { pattern_id: string; pattern_name: string; count: number }[];
-  hourly_distribution: { hour: number; count: number }[];
-  peak_hour: number;
-  average_duration: number;
-}
-
+/**
+ * パターン紐付け候補
+ */
 export interface PatternLinkingCandidate {
   record_id: string;
-  pattern_id: string;
-  pattern_name: string;
-  confidence_score: number;
-  matching_criteria: string[];
+  pattern: ServicePattern;
+  confidence: number; // 0-1の信頼度
+  matching_factors: {
+    user_match: boolean;
+    time_match: boolean;
+    day_match: boolean;
+    service_match: boolean;
+  };
+  auto_apply_eligible: boolean; // 自動適用可能かどうか
+  reason: string; // 候補として選ばれた理由
 }
 
+/**
+ * パターン紐付け結果
+ */
 export interface PatternLinkingResult {
   record_id: string;
-  pattern_id: string;
+  pattern_id: string | null;
   success: boolean;
-  error?: string;
+  confidence: number;
+  method: 'auto' | 'manual' | 'suggested';
+  applied_at: string;
+  previous_pattern_id?: string | null;
   error_message?: string;
 }
 
-export interface BulkPatternLinking {
-  user_id?: string;
-  date_range?: {
-    start_date: string;
-    end_date: string;
-  };
-  service_types?: string[];
-  auto_link_threshold: number;
-  dry_run: boolean;
+/**
+ * 日別データ管理の統計情報
+ */
+export interface DailyDataStats {
+  date: string;
+  total_records: number;
+  assigned_records: number;
+  unassigned_records: number;
+  completion_rate: number;
+  unique_users: number;
+  unique_staff: number;
+  unique_patterns: number;
+  peak_hour: number; // 最も記録が多い時間帯
+  pattern_distribution: {
+    pattern_id: string;
+    pattern_name: string;
+    count: number;
+    percentage: number;
+  }[];
 }
 
+/**
+ * パターン紐付け操作の履歴
+ */
+export interface PatternLinkingHistory {
+  id: string;
+  record_id: string;
+  pattern_id: string | null;
+  previous_pattern_id: string | null;
+  operation: 'assign' | 'unassign' | 'reassign';
+  method: 'auto' | 'manual' | 'bulk';
+  confidence: number;
+  user_id?: string; // 操作したユーザー
+  timestamp: string;
+  notes?: string;
+}
+
+/**
+ * 未紐付けデータの分析結果
+ */
+export interface UnlinkedDataAnalysis {
+  date: string;
+  unlinked_records: TimeSlotRecord[];
+  analysis: {
+    total_unlinked: number;
+    by_time_slot: {
+      hour: number;
+      count: number;
+    }[];
+    by_user: {
+      user_name: string;
+      count: number;
+    }[];
+    by_service_type: {
+      service_type: string;
+      count: number;
+    }[];
+  };
+  suggestions: {
+    create_new_patterns: boolean;
+    similar_patterns: ServicePattern[];
+    bulk_assignment_candidates: PatternLinkingCandidate[];
+  };
+}
+
+/**
+ * 日別データ管理の設定
+ */
+export interface DailyDataManagementConfig {
+  time_slot_duration: number; // 時間スロットの長さ（分）
+  auto_linking: {
+    enabled: boolean;
+    confidence_threshold: number; // 自動紐付けの信頼度閾値
+    require_confirmation: boolean;
+  };
+  display: {
+    show_confidence_scores: boolean;
+    highlight_unlinked: boolean;
+    group_by_user: boolean;
+    show_pattern_suggestions: boolean;
+  };
+  notifications: {
+    unlinked_data_alert: boolean;
+    low_confidence_warning: boolean;
+    bulk_operation_confirmation: boolean;
+  };
+}
+
+/**
+ * 日別データ管理のフィルター条件
+ */
+export interface DailyDataFilter {
+  status: 'all' | 'assigned' | 'unassigned';
+  users: string[];
+  staff: string[];
+  patterns: string[];
+  time_range: {
+    start_hour: number;
+    end_hour: number;
+  };
+  confidence_range: {
+    min: number;
+    max: number;
+  };
+  service_types: string[];
+}
+
+/**
+ * 一括パターン紐付け操作
+ */
+export interface BulkPatternLinking {
+  operation: 'assign' | 'unassign' | 'reassign';
+  record_ids: string[];
+  pattern_id?: string;
+  force_apply: boolean; // 低信頼度でも強制適用
+  backup_original: boolean; // 元データをバックアップ
+}
+
+/**
+ * 一括操作の結果
+ */
 export interface BulkOperationResult {
   total_processed: number;
   successful: number;
   failed: number;
   results: PatternLinkingResult[];
-  errors: string[];
+  errors: {
+    record_id: string;
+    error_message: string;
+  }[];
+  summary: {
+    patterns_assigned: {
+      pattern_id: string;
+      pattern_name: string;
+      count: number;
+    }[];
+    completion_rate_change: number;
+  };
 }
 
-export interface UnlinkedDataAnalysis {
-  total_unlinked: number;
-  by_service_type: { [key: string]: number };
-  by_staff: { [key: string]: number };
-  by_date_range: { [key: string]: number };
-  suggestions: PatternLinkingCandidate[];
-  analysis?: UnlinkedDataAnalysis;
-}
+/**
+ * 日別データ管理のイベント
+ */
+export type DailyDataManagementEvent = 
+  | { type: 'record_selected'; payload: { record_id: string; record: TimeSlotRecord } }
+  | { type: 'pattern_assigned'; payload: { record_id: string; pattern_id: string; confidence: number } }
+  | { type: 'pattern_unassigned'; payload: { record_id: string; previous_pattern_id: string } }
+  | { type: 'bulk_operation_completed'; payload: { operation: BulkPatternLinking; result: BulkOperationResult } }
+  | { type: 'filter_applied'; payload: { filter: DailyDataFilter; result_count: number } }
+  | { type: 'unlinked_data_detected'; payload: { analysis: UnlinkedDataAnalysis } }
+  | { type: 'auto_linking_completed'; payload: { processed: number; assigned: number } };
 
-export interface DailyDataFilter {
-  user_id?: string;
-  date_range?: {
-    start_date: string;
-    end_date: string;
-  };
-  service_types?: string[];
-  staff_names?: string[];
-  pattern_linked?: boolean;
-  time_range?: {
-    start_hour: number;
-    end_hour: number;
-  };
-  status?: 'all' | 'assigned' | 'unassigned';
-}
+/**
+ * 日別データ管理のイベントハンドラー
+ */
+export type DailyDataManagementEventHandler = (event: DailyDataManagementEvent) => void | Promise<void>;
 
-export interface DailyDataManagementConfig {
-  auto_pattern_linking: boolean;
-  pattern_confidence_threshold: number;
-  bulk_operation_batch_size: number;
-  enable_data_validation: boolean;
-  default_time_slot_duration: number;
-  show_advanced_filters: boolean;
-  display?: {
-    show_confidence_scores: boolean;
-    highlight_unlinked: boolean;
-  };
+/**
+ * 日別データ管理サービスのインターフェース
+ */
+export interface IDailyDataManagementService {
+  // データ取得
+  getDailyData(date: string): Promise<DailyDataDetail>;
+  getTimeSlotData(date: string, hour: number): Promise<TimeSlot>;
+  getDailyStats(date: string): Promise<DailyDataStats>;
+  
+  // パターン紐付け
+  linkPattern(recordId: string, patternId: string, method: 'auto' | 'manual'): Promise<PatternLinkingResult>;
+  unlinkPattern(recordId: string): Promise<PatternLinkingResult>;
+  bulkLinkPatterns(operation: BulkPatternLinking): Promise<BulkOperationResult>;
+  
+  // パターン候補
+  getPatternCandidates(recordId: string): Promise<PatternLinkingCandidate[]>;
+  autoLinkPatterns(date: string, config?: DailyDataManagementConfig): Promise<BulkOperationResult>;
+  
+  // 分析
+  analyzeUnlinkedData(date: string): Promise<UnlinkedDataAnalysis>;
+  getPatternLinkingHistory(date: string): Promise<PatternLinkingHistory[]>;
+  
+  // 設定
+  getConfig(): DailyDataManagementConfig;
+  updateConfig(config: Partial<DailyDataManagementConfig>): Promise<void>;
+  
+  // イベント処理
+  addEventListener(handler: DailyDataManagementEventHandler): () => void;
+  removeEventListener(handler: DailyDataManagementEventHandler): void;
 }
